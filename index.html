@@ -1,0 +1,2170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<title>Mini Fútbol</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    background: #111;
+}
+
+button {
+    font-family: inherit;
+}
+
+#game {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* =========================
+   PANTALLAS
+========================= */
+
+.screen {
+    position: absolute;
+    inset: 0;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.screen.active {
+    display: flex;
+}
+
+/* =========================
+   MENÚ
+========================= */
+
+#menu {
+    background-image: url("fondo.JPG");
+    background-size: cover;
+    background-position: center;
+}
+
+.menu-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,.30);
+}
+
+.menu-content {
+    position: relative;
+    z-index: 2;
+    width: min(90%, 600px);
+    text-align: center;
+}
+
+.title {
+    color: white;
+    font-size: clamp(42px, 9vw, 90px);
+    font-weight: 900;
+    text-shadow:
+        4px 4px 0 #111,
+        0 0 15px rgba(0,0,0,.7);
+    margin-bottom: 35px;
+}
+
+.big-button {
+    border: none;
+    border-radius: 18px;
+    padding: 16px 35px;
+    font-size: clamp(20px, 4vw, 32px);
+    font-weight: bold;
+    color: white;
+    background: #168a3b;
+    box-shadow: 0 6px 0 #075b25;
+    cursor: pointer;
+}
+
+.big-button:active {
+    transform: translateY(5px);
+    box-shadow: 0 1px 0 #075b25;
+}
+
+/* =========================
+   SELECCIÓN
+========================= */
+
+#selection {
+    background-image: url("seleccion.png");
+    background-size: cover;
+    background-position: center;
+}
+
+.selection-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,.20);
+}
+
+.selection-content {
+    position: relative;
+    z-index: 2;
+    width: min(95%, 900px);
+    text-align: center;
+}
+
+.selection-title {
+    color: white;
+    font-size: clamp(26px, 6vw, 55px);
+    font-weight: 900;
+    text-shadow: 3px 3px 0 #111;
+    margin-bottom: 20px;
+}
+
+.country-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.country {
+    border: none;
+    border-radius: 15px;
+    padding: 10px;
+    background: rgba(255,255,255,.88);
+    cursor: pointer;
+    box-shadow: 0 5px 0 rgba(0,0,0,.35);
+}
+
+.country:active {
+    transform: translateY(4px);
+    box-shadow: 0 1px 0 rgba(0,0,0,.35);
+}
+
+.country img {
+    width: clamp(50px, 12vw, 95px);
+    height: clamp(50px, 12vw, 95px);
+    object-fit: contain;
+}
+
+.country-name {
+    display: block;
+    margin-top: 5px;
+    font-size: clamp(12px, 2.5vw, 20px);
+    font-weight: bold;
+}
+
+/* =========================
+   PARTIDO
+========================= */
+
+#match {
+    background: #222;
+}
+
+#field {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+
+    background-image: url("cancha.JPEG");
+    background-size: cover;
+    background-position: center;
+}
+
+#field::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: rgba(0,0,0,.08);
+}
+
+/* =========================
+   MARCADOR
+========================= */
+
+#scoreboard {
+    position: absolute;
+    z-index: 30;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+
+    display: flex;
+    align-items: center;
+    gap: 15px;
+
+    padding: 8px 18px;
+    border-radius: 15px;
+
+    color: white;
+    background: rgba(0,0,0,.72);
+    font-size: clamp(18px, 4vw, 30px);
+    font-weight: 900;
+}
+
+.score-team {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.score-team img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+}
+
+#score {
+    min-width: 20px;
+    text-align: center;
+}
+
+/* =========================
+   JUGADORES
+========================= */
+
+.player {
+    position: absolute;
+    z-index: 10;
+
+    width: 70px;
+    height: 110px;
+
+    transform-origin: center bottom;
+}
+
+.player img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+}
+
+#player {
+    left: 25%;
+    bottom: 16%;
+}
+
+#enemy {
+    left: 70%;
+    bottom: 16%;
+}
+
+/* =========================
+   BALÓN
+========================= */
+
+#ball {
+    position: absolute;
+    z-index: 12;
+
+    width: 42px;
+    height: 42px;
+
+    object-fit: contain;
+    pointer-events: none;
+
+    transform-origin: center;
+}
+
+/* =========================
+   PORTERÍAS
+========================= */
+
+.goal {
+    position: absolute;
+    z-index: 5;
+
+    width: 105px;
+    height: 220px;
+
+    object-fit: fill;
+    pointer-events: none;
+}
+
+#goal-left {
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%) scaleX(-1);
+}
+
+#goal-right {
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* =========================
+   CONTROLES
+========================= */
+
+#controls {
+    position: absolute;
+    inset: 0;
+    z-index: 40;
+    pointer-events: none;
+}
+
+#joystick-zone {
+    position: absolute;
+    left: 20px;
+    bottom: 20px;
+
+    width: 150px;
+    height: 150px;
+
+    pointer-events: auto;
+}
+
+#joystick-base {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+
+    width: 130px;
+    height: 130px;
+
+    transform: translate(-50%, -50%);
+
+    border-radius: 50%;
+    background: rgba(255,255,255,.25);
+    border: 3px solid rgba(255,255,255,.5);
+}
+
+#joystick-stick {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+
+    width: 58px;
+    height: 58px;
+
+    transform: translate(-50%, -50%);
+
+    border-radius: 50%;
+    background: rgba(255,255,255,.75);
+    border: 3px solid rgba(0,0,0,.25);
+}
+
+.shot-button {
+    position: absolute;
+    right: 25px;
+
+    width: 85px;
+    height: 85px;
+
+    border-radius: 50%;
+    border: 4px solid rgba(255,255,255,.7);
+
+    color: white;
+    font-size: 15px;
+    font-weight: 900;
+
+    pointer-events: auto;
+    touch-action: none;
+}
+
+#normal-shot {
+    bottom: 30px;
+    background: rgba(30,130,255,.75);
+}
+
+#high-shot {
+    bottom: 130px;
+    background: rgba(255,150,30,.80);
+}
+
+.shot-button:active {
+    transform: scale(.92);
+}
+
+/* =========================
+   MENSAJE DE GOL
+========================= */
+
+#goal-message {
+    position: absolute;
+    z-index: 100;
+
+    left: 50%;
+    top: 40%;
+
+    transform: translate(-50%, -50%) scale(.7);
+
+    opacity: 0;
+    pointer-events: none;
+
+    color: white;
+    font-size: clamp(45px, 10vw, 100px);
+    font-weight: 900;
+
+    text-shadow:
+        5px 5px 0 #111,
+        0 0 25px rgba(255,255,255,.4);
+
+    transition: .25s;
+}
+
+#goal-message.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+/* =========================
+   PANTALLA FINAL
+========================= */
+
+#end-screen {
+    position: absolute;
+    inset: 0;
+    z-index: 200;
+
+    display: none;
+    justify-content: center;
+    align-items: center;
+
+    background: rgba(0,0,0,.75);
+}
+
+#end-screen.show {
+    display: flex;
+}
+
+.end-box {
+    text-align: center;
+    color: white;
+}
+
+.end-box h1 {
+    font-size: clamp(40px, 9vw, 80px);
+    margin: 0 0 20px;
+}
+
+.end-box button {
+    border: none;
+    border-radius: 15px;
+    padding: 15px 30px;
+    font-size: 22px;
+    font-weight: bold;
+}
+
+/* =========================
+   VERTICAL
+========================= */
+
+@media (orientation: portrait) {
+
+    .country-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .player {
+        width: 55px;
+        height: 90px;
+    }
+
+    .goal {
+        width: 70px;
+        height: 170px;
+    }
+
+    #joystick-zone {
+        width: 125px;
+        height: 125px;
+    }
+
+    #joystick-base {
+        width: 110px;
+        height: 110px;
+    }
+
+    #joystick-stick {
+        width: 50px;
+        height: 50px;
+    }
+
+    .shot-button {
+        width: 72px;
+        height: 72px;
+        right: 15px;
+    }
+
+    #high-shot {
+        bottom: 110px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div id="game">
+
+<!-- =========================
+     MENÚ
+========================= -->
+
+<section id="menu" class="screen active">
+
+    <div class="menu-overlay"></div>
+
+    <div class="menu-content">
+
+        <div class="title">
+            MINI FÚTBOL
+        </div>
+
+        <button class="big-button"
+                onclick="startSelection()">
+            JUGAR ⚽
+        </button>
+
+    </div>
+
+</section>
+
+
+<!-- =========================
+     SELECCIÓN
+========================= -->
+
+<section id="selection" class="screen">
+
+    <div class="selection-overlay"></div>
+
+    <div class="selection-content">
+
+        <div class="selection-title">
+            ELIGE TU PAÍS
+        </div>
+
+        <div class="country-grid">
+
+            <button class="country"
+                    onclick="chooseCountry('mexico')">
+
+                <img src="mexicoescudo.png">
+
+                <span class="country-name">
+                    México
+                </span>
+
+            </button>
+
+
+            <button class="country"
+                    onclick="chooseCountry('brasil')">
+
+                <img src="brasilescudo.png">
+
+                <span class="country-name">
+                    Brasil
+                </span>
+
+            </button>
+
+
+            <button class="country"
+                    onclick="chooseCountry('argentina')">
+
+                <img src="argentinaescudo.png">
+
+                <span class="country-name">
+                    Argentina
+                </span>
+
+            </button>
+
+
+            <button class="country"
+                    onclick="chooseCountry('alemania')">
+
+                <img src="alemaniaescudo.png">
+
+                <span class="country-name">
+                    Alemania
+                </span>
+
+            </button>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================
+     PARTIDO
+========================= -->
+
+<section id="match" class="screen">
+
+    <div id="field">
+
+        <img id="goal-left"
+             class="goal"
+             src="portería.png">
+
+        <img id="goal-right"
+             class="goal"
+             src="portería.png">
+
+
+        <img id="ball"
+             src="balon.png">
+
+
+        <div id="player"
+             class="player">
+
+            <img id="player-image"
+                 src="mexicojugador.png">
+
+        </div>
+
+
+        <div id="enemy"
+             class="player">
+
+            <img id="enemy-image"
+                 src="brasiljugador.png">
+
+        </div>
+
+    </div>
+
+
+    <!-- MARCADOR -->
+
+    <div id="scoreboard">
+
+        <div class="score-team">
+
+            <img id="score-left-img"
+                 src="mexicoescudo.png">
+
+            <span id="left-score">
+                0
+            </span>
+
+        </div>
+
+        <div id="score">
+            -
+        </div>
+
+        <div class="score-team">
+
+            <span id="right-score">
+                0
+            </span>
+
+            <img id="score-right-img"
+                 src="brasilescudo.png">
+
+        </div>
+
+    </div>
+
+
+    <div id="goal-message">
+        ¡GOOOOL!
+    </div>
+
+
+    <!-- CONTROLES -->
+
+    <div id="controls">
+
+        <div id="joystick-zone">
+
+            <div id="joystick-base"></div>
+
+            <div id="joystick-stick"></div>
+
+        </div>
+
+
+        <button id="normal-shot"
+                class="shot-button">
+            TIRO
+        </button>
+
+
+        <button id="high-shot"
+                class="shot-button">
+            TIRO ALTO
+        </button>
+
+    </div>
+
+
+    <!-- PANTALLA FINAL -->
+
+    <div id="end-screen">
+
+        <div class="end-box">
+
+            <h1 id="winner-text">
+                ¡GANASTE!
+            </h1>
+
+            <button onclick="restartGame()">
+                VOLVER A JUGAR
+            </button>
+
+        </div>
+
+    </div>
+
+</section>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   IMÁGENES
+========================================================= */
+
+const assets = {
+
+    players: {
+        mexico: "mexicojugador.png",
+        brasil: "brasiljugador.png",
+        argentina: "argentinajugador.png",
+        alemania: "alemaniajugador.png"
+    },
+
+    shields: {
+        mexico: "mexicoescudo.png",
+        brasil: "brasilescudo.png",
+        argentina: "argentinaescudo.png",
+        alemania: "alemaniaescudo.png"
+    }
+
+};
+
+
+/* =========================================================
+   VARIABLES
+========================================================= */
+
+let selectedCountry = "mexico";
+let enemyCountry = "brasil";
+
+let leftScore = 0;
+let rightScore = 0;
+
+let gameRunning = false;
+let goalPause = false;
+
+let gameAnimation = null;
+
+
+const player = {
+
+    x: 25,
+    y: 72,
+
+    vx: 0,
+    vy: 0,
+
+    speed: 0.055,
+
+    jumping: false,
+    jumpVelocity: 0
+
+};
+
+
+const enemy = {
+
+    x: 70,
+    y: 72,
+
+    vx: 0,
+    vy: 0,
+
+    speed: 0.020,
+
+    reaction: 0.985,
+
+    mistakeTimer: 0
+
+};
+
+
+const ball = {
+
+    x: 50,
+    y: 70,
+
+    vx: 0,
+    vy: 0,
+
+    radius: 2.2,
+
+    rotation: 0
+
+};
+
+
+let joystickX = 0;
+let joystickY = 0;
+
+let joystickTouch = null;
+
+
+/* =========================================================
+   PANTALLAS
+========================================================= */
+
+function showScreen(id) {
+
+    document
+        .querySelectorAll(".screen")
+        .forEach(screen => {
+
+            screen.classList.remove("active");
+
+        });
+
+    document
+        .getElementById(id)
+        .classList.add("active");
+}
+
+
+function startSelection() {
+
+    showScreen("selection");
+
+}
+
+
+/* =========================================================
+   SELECCIONAR PAÍS
+========================================================= */
+
+function chooseCountry(country) {
+
+    selectedCountry = country;
+
+    const possibleEnemies =
+        Object.keys(assets.players)
+        .filter(c => c !== selectedCountry);
+
+
+    enemyCountry =
+        possibleEnemies[
+            Math.floor(
+                Math.random() *
+                possibleEnemies.length
+            )
+        ];
+
+
+    document
+        .getElementById("player-image")
+        .src =
+        assets.players[selectedCountry];
+
+
+    document
+        .getElementById("enemy-image")
+        .src =
+        assets.players[enemyCountry];
+
+
+    document
+        .getElementById("score-left-img")
+        .src =
+        assets.shields[selectedCountry];
+
+
+    document
+        .getElementById("score-right-img")
+        .src =
+        assets.shields[enemyCountry];
+
+
+    /*
+       Ocultar pantalla final por si
+       estamos jugando otra vez.
+    */
+
+    document
+        .getElementById("end-screen")
+        .classList.remove("show");
+
+
+    showScreen("match");
+
+
+    setTimeout(startGame, 100);
+
+}
+
+
+/* =========================================================
+   INICIAR PARTIDO
+========================================================= */
+
+function startGame() {
+
+    /*
+       Detener cualquier bucle anterior.
+    */
+
+    if (gameAnimation) {
+
+        cancelAnimationFrame(gameAnimation);
+
+        gameAnimation = null;
+    }
+
+
+    leftScore = 0;
+    rightScore = 0;
+
+    updateScore();
+
+    resetPositions();
+
+    gameRunning = true;
+    goalPause = false;
+
+    gameLoop();
+
+}
+
+
+/* =========================================================
+   REINICIAR DESPUÉS DEL PARTIDO
+========================================================= */
+
+function restartGame() {
+
+    /*
+       Detener completamente el partido anterior.
+    */
+
+    gameRunning = false;
+    goalPause = false;
+
+
+    if (gameAnimation) {
+
+        cancelAnimationFrame(gameAnimation);
+
+        gameAnimation = null;
+    }
+
+
+    /*
+       Ocultar pantalla final.
+    */
+
+    document
+        .getElementById("end-screen")
+        .classList.remove("show");
+
+
+    /*
+       Reiniciar marcador.
+    */
+
+    leftScore = 0;
+    rightScore = 0;
+
+    updateScore();
+
+
+    /*
+       Reiniciar posiciones.
+    */
+
+    resetPositions();
+
+
+    /*
+       Volver a elegir país.
+    */
+
+    showScreen("selection");
+
+}
+
+
+/* =========================================================
+   POSICIONES
+========================================================= */
+
+function resetPositions() {
+
+    player.x = 25;
+    player.y = 72;
+
+    player.vx = 0;
+    player.vy = 0;
+
+    player.jumping = false;
+    player.jumpVelocity = 0;
+
+
+    enemy.x = 70;
+    enemy.y = 72;
+
+    enemy.vx = 0;
+    enemy.vy = 0;
+
+
+    ball.x = 50;
+    ball.y = 70;
+
+    ball.vx = 0;
+    ball.vy = 0;
+
+    ball.rotation = 0;
+
+
+    resetJoystick();
+
+    render();
+
+}
+
+
+/* =========================================================
+   JOYSTICK
+========================================================= */
+
+const joystickZone =
+    document.getElementById(
+        "joystick-zone"
+    );
+
+
+const joystickStick =
+    document.getElementById(
+        "joystick-stick"
+    );
+
+
+function updateJoystick(clientX, clientY) {
+
+    const rect =
+        joystickZone.getBoundingClientRect();
+
+
+    const centerX =
+        rect.left +
+        rect.width / 2;
+
+
+    const centerY =
+        rect.top +
+        rect.height / 2;
+
+
+    let dx =
+        clientX - centerX;
+
+
+    let dy =
+        clientY - centerY;
+
+
+    const maxDistance = 45;
+
+
+    const distance =
+        Math.sqrt(
+            dx * dx +
+            dy * dy
+        );
+
+
+    if (distance > maxDistance) {
+
+        dx =
+            dx / distance *
+            maxDistance;
+
+
+        dy =
+            dy / distance *
+            maxDistance;
+    }
+
+
+    joystickX =
+        dx / maxDistance;
+
+
+    joystickY =
+        dy / maxDistance;
+
+
+    joystickStick.style.transform =
+        `translate(
+            calc(-50% + ${dx}px),
+            calc(-50% + ${dy}px)
+        )`;
+
+}
+
+
+function resetJoystick() {
+
+    joystickX = 0;
+    joystickY = 0;
+
+
+    joystickStick.style.transform =
+        "translate(-50%, -50%)";
+
+}
+
+
+/* =========================================================
+   TOUCH JOYSTICK
+========================================================= */
+
+joystickZone.addEventListener(
+    "touchstart",
+    e => {
+
+        e.preventDefault();
+
+        joystickTouch =
+            e.changedTouches[0]
+            .identifier;
+
+
+        const touch =
+            e.changedTouches[0];
+
+
+        updateJoystick(
+            touch.clientX,
+            touch.clientY
+        );
+
+    },
+    {passive:false}
+);
+
+
+joystickZone.addEventListener(
+    "touchmove",
+    e => {
+
+        e.preventDefault();
+
+        for (
+            const touch
+            of e.changedTouches
+        ) {
+
+            if (
+                touch.identifier ===
+                joystickTouch
+            ) {
+
+                updateJoystick(
+                    touch.clientX,
+                    touch.clientY
+                );
+
+            }
+
+        }
+
+    },
+    {passive:false}
+);
+
+
+joystickZone.addEventListener(
+    "touchend",
+    e => {
+
+        for (
+            const touch
+            of e.changedTouches
+        ) {
+
+            if (
+                touch.identifier ===
+                joystickTouch
+            ) {
+
+                joystickTouch = null;
+
+                resetJoystick();
+
+            }
+
+        }
+
+    },
+    {passive:false}
+);
+
+
+/* =========================================================
+   BOTÓN TIRO NORMAL
+========================================================= */
+
+document
+    .getElementById("normal-shot")
+    .addEventListener(
+        "touchstart",
+        e => {
+
+            e.preventDefault();
+
+            if (
+                !gameRunning ||
+                goalPause
+            ) return;
+
+
+            shoot(false);
+
+        },
+        {passive:false}
+    );
+
+
+/* =========================================================
+   BOTÓN TIRO ALTO
+========================================================= */
+
+document
+    .getElementById("high-shot")
+    .addEventListener(
+        "touchstart",
+        e => {
+
+            e.preventDefault();
+
+            if (
+                !gameRunning ||
+                goalPause
+            ) return;
+
+
+            shoot(true);
+
+        },
+        {passive:false}
+    );
+
+
+/* =========================================================
+   TIRO DEL JUGADOR
+========================================================= */
+
+function shoot(high) {
+
+    const dx =
+        ball.x - player.x;
+
+
+    const dy =
+        ball.y - player.y;
+
+
+    const distance =
+        Math.sqrt(
+            dx * dx +
+            dy * dy
+        );
+
+
+    if (distance > 12) return;
+
+
+    if (high) {
+
+        ball.vx = 0.75;
+
+        ball.vy = -1.15;
+
+    } else {
+
+        ball.vx = 0.55;
+
+        ball.vy = -0.08;
+
+    }
+
+
+    ball.rotation +=
+        high ? 20 : 12;
+
+}
+
+
+/* =========================================================
+   FÍSICA DEL BALÓN
+========================================================= */
+
+function updateBall() {
+
+    ball.x += ball.vx;
+
+    ball.y += ball.vy;
+
+
+    /*
+       Gravedad.
+    */
+
+    ball.vy += 0.045;
+
+
+    /*
+       Fricción.
+    */
+
+    ball.vx *= 0.985;
+
+
+    /*
+       Rodar.
+    */
+
+    ball.rotation +=
+        ball.vx * 8;
+
+
+    /*
+       Suelo.
+    */
+
+    if (ball.y >= 78) {
+
+        ball.y = 78;
+
+
+        if (
+            Math.abs(ball.vy) >
+            0.08
+        ) {
+
+            ball.vy *= -0.18;
+
+        } else {
+
+            ball.vy = 0;
+
+        }
+
+    }
+
+
+    /*
+       Pared invisible superior.
+    */
+
+    if (ball.y <= 5) {
+
+        ball.y = 5;
+
+        ball.vy =
+            Math.abs(ball.vy) *
+            0.18;
+
+    }
+
+
+    /*
+       Límites laterales.
+    */
+
+    if (ball.x <= 1) {
+
+        ball.x = 1;
+
+        ball.vx *= -0.35;
+
+    }
+
+
+    if (ball.x >= 99) {
+
+        ball.x = 99;
+
+        ball.vx *= -0.35;
+
+    }
+
+}
+
+
+/* =========================================================
+   JUGADOR
+========================================================= */
+
+function updatePlayer() {
+
+    if (goalPause) return;
+
+
+    /*
+       Movimiento horizontal.
+    */
+
+    player.vx =
+        joystickX *
+        player.speed *
+        100;
+
+
+    player.x += player.vx;
+
+
+    /*
+       Saltar.
+    */
+
+    if (
+        joystickY < -0.55 &&
+        !player.jumping
+    ) {
+
+        player.jumping = true;
+
+        player.jumpVelocity = -1.25;
+
+    }
+
+
+    if (player.jumping) {
+
+        player.y +=
+            player.jumpVelocity;
+
+
+        player.jumpVelocity +=
+            0.065;
+
+
+        if (player.y >= 72) {
+
+            player.y = 72;
+
+            player.jumping = false;
+
+            player.jumpVelocity = 0;
+
+        }
+
+    }
+
+
+    /*
+       Límites.
+    */
+
+    player.x =
+        Math.max(
+            8,
+            Math.min(
+                91,
+                player.x
+            )
+        );
+
+}
+
+
+/* =========================================================
+   IA
+========================================================= */
+
+function updateEnemy() {
+
+    if (goalPause) return;
+
+
+    enemy.mistakeTimer--;
+
+
+    if (
+        enemy.mistakeTimer <= 0
+    ) {
+
+        enemy.mistakeTimer =
+            30 +
+            Math.random() * 100;
+
+
+        /*
+           A veces reacciona mal.
+        */
+
+        if (
+            Math.random() <
+            0.22
+        ) {
+
+            enemy.reaction =
+                0.3 +
+                Math.random() * 0.5;
+
+        } else {
+
+            enemy.reaction =
+                0.85 +
+                Math.random() * 0.15;
+
+        }
+
+    }
+
+
+    /*
+       Busca el balón.
+    */
+
+    let target =
+        ball.x;
+
+
+    /*
+       Error de puntería.
+    */
+
+    target +=
+        (Math.random() - 0.5) *
+        8;
+
+
+    const difference =
+        target -
+        enemy.x;
+
+
+    if (
+        Math.abs(difference) >
+        2
+    ) {
+
+        enemy.vx =
+            Math.sign(difference) *
+            enemy.speed *
+            100 *
+            enemy.reaction;
+
+
+        enemy.x +=
+            enemy.vx;
+
+    }
+
+
+    enemy.x =
+        Math.max(
+            8,
+            Math.min(
+                91,
+                enemy.x
+            )
+        );
+
+
+    /*
+       Intenta tirar.
+    */
+
+    const distance =
+        Math.abs(
+            ball.x -
+            enemy.x
+        );
+
+
+    if (
+        distance < 8 &&
+        Math.random() <
+        0.025
+    ) {
+
+        enemyShoot();
+
+    }
+
+}
+
+
+/* =========================================================
+   TIRO DE IA
+========================================================= */
+
+function enemyShoot() {
+
+    /*
+       Fallar completamente.
+    */
+
+    if (
+        Math.random() <
+        0.20
+    ) {
+
+        ball.vx =
+            -0.15 +
+            Math.random() * 0.3;
+
+
+        ball.vy = -0.1;
+
+        return;
+
+    }
+
+
+    /*
+       Tiro normal.
+    */
+
+    if (
+        Math.random() <
+        0.70
+    ) {
+
+        ball.vx = -0.48;
+
+        ball.vy = -0.06;
+
+    } else {
+
+        /*
+           Tiro alto.
+        */
+
+        ball.vx = -0.65;
+
+        ball.vy = -0.8;
+
+    }
+
+
+    /*
+       Mala puntería.
+    */
+
+    ball.vx +=
+        (Math.random() - 0.5) *
+        0.25;
+
+}
+
+
+/* =========================================================
+   CHOQUE ENTRE JUGADORES
+========================================================= */
+
+function playerCollision() {
+
+    const distance =
+        Math.abs(
+            player.x -
+            enemy.x
+        );
+
+
+    if (distance < 7) {
+
+        const push =
+            (7 - distance) *
+            0.5;
+
+
+        if (
+            player.x <
+            enemy.x
+        ) {
+
+            player.x -= push;
+            enemy.x += push;
+
+        } else {
+
+            player.x += push;
+            enemy.x -= push;
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   BALÓN CON JUGADORES
+========================================================= */
+
+function playerBallCollision() {
+
+    /*
+       Jugador.
+    */
+
+    const dx =
+        ball.x -
+        player.x;
+
+
+    const dy =
+        ball.y -
+        player.y;
+
+
+    const distance =
+        Math.sqrt(
+            dx * dx +
+            dy * dy
+        );
+
+
+    if (
+        distance < 7
+    ) {
+
+        if (
+            player.jumping
+        ) {
+
+            ball.vy = -0.35;
+
+            ball.vx =
+                Math.max(
+                    ball.vx,
+                    0.10
+                );
+
+        } else {
+
+            ball.vx += 0.06;
+
+        }
+
+    }
+
+
+    /*
+       Rival.
+    */
+
+    const dx2 =
+        ball.x -
+        enemy.x;
+
+
+    const dy2 =
+        ball.y -
+        enemy.y;
+
+
+    const distance2 =
+        Math.sqrt(
+            dx2 * dx2 +
+            dy2 * dy2
+        );
+
+
+    if (
+        distance2 < 7
+    ) {
+
+        if (
+            Math.random() <
+            0.18
+        ) {
+
+            ball.vx +=
+                (Math.random() - 0.5) *
+                0.3;
+
+        } else {
+
+            ball.vx -= 0.04;
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   GOLES
+========================================================= */
+
+function checkGoal() {
+
+    /*
+       Gol del jugador.
+    */
+
+    if (
+        ball.x >= 96 &&
+        ball.y > 25 &&
+        ball.y < 78
+    ) {
+
+        scoreGoal("player");
+
+        return;
+
+    }
+
+
+    /*
+       Gol del rival.
+    */
+
+    if (
+        ball.x <= 4 &&
+        ball.y > 25 &&
+        ball.y < 78
+    ) {
+
+        scoreGoal("enemy");
+
+    }
+
+}
+
+
+/* =========================================================
+   GOL
+========================================================= */
+
+function scoreGoal(team) {
+
+    if (goalPause) return;
+
+
+    goalPause = true;
+
+
+    if (
+        team === "player"
+    ) {
+
+        leftScore++;
+
+    } else {
+
+        rightScore++;
+
+    }
+
+
+    updateScore();
+
+
+    const message =
+        document.getElementById(
+            "goal-message"
+        );
+
+
+    message.textContent =
+        team === "player"
+        ? "¡GOOOOL! ⚽"
+        : "¡GOL DEL RIVAL!";
+
+
+    message.classList.add(
+        "show"
+    );
+
+
+    /*
+       Esperar un poco y
+       continuar el partido.
+    */
+
+    setTimeout(() => {
+
+        message.classList.remove(
+            "show"
+        );
+
+
+        /*
+           Primero comprobar si
+           alguien llegó a 3.
+        */
+
+        if (
+            leftScore >= 3 ||
+            rightScore >= 3
+        ) {
+
+            finishGame();
+
+            return;
+
+        }
+
+
+        /*
+           Si no terminó,
+           empieza otra jugada.
+        */
+
+        resetPositions();
+
+        goalPause = false;
+
+    }, 1300);
+
+}
+
+
+/* =========================================================
+   MARCADOR
+========================================================= */
+
+function updateScore() {
+
+    document
+        .getElementById("left-score")
+        .textContent =
+        leftScore;
+
+
+    document
+        .getElementById("right-score")
+        .textContent =
+        rightScore;
+
+}
+
+
+/* =========================================================
+   FINAL DEL PARTIDO
+========================================================= */
+
+function finishGame() {
+
+    gameRunning = false;
+
+
+    if (gameAnimation) {
+
+        cancelAnimationFrame(
+            gameAnimation
+        );
+
+        gameAnimation = null;
+
+    }
+
+
+    const endScreen =
+        document.getElementById(
+            "end-screen"
+        );
+
+
+    const winnerText =
+        document.getElementById(
+            "winner-text"
+        );
+
+
+    if (
+        leftScore >
+        rightScore
+    ) {
+
+        winnerText.textContent =
+            "¡GANASTE! 🏆";
+
+    } else {
+
+        winnerText.textContent =
+            "¡GANÓ EL RIVAL! 🏆";
+
+    }
+
+
+    endScreen.classList.add(
+        "show"
+    );
+
+}
+
+
+/* =========================================================
+   DIBUJAR OBJETOS
+========================================================= */
+
+function render() {
+
+    const playerElement =
+        document.getElementById(
+            "player"
+        );
+
+
+    const enemyElement =
+        document.getElementById(
+            "enemy"
+        );
+
+
+    const ballElement =
+        document.getElementById(
+            "ball"
+        );
+
+
+    playerElement.style.left =
+        player.x + "%";
+
+
+    playerElement.style.bottom =
+        (100 - player.y) + "%";
+
+
+    enemyElement.style.left =
+        enemy.x + "%";
+
+
+    enemyElement.style.bottom =
+        (100 - enemy.y) + "%";
+
+
+    ballElement.style.left =
+        ball.x + "%";
+
+
+    ballElement.style.top =
+        ball.y + "%";
+
+
+    ballElement.style.transform =
+        `translate(-50%, -50%)
+         rotate(${ball.rotation}deg)`;
+
+}
+
+
+/* =========================================================
+   BUCLE PRINCIPAL
+========================================================= */
+
+function gameLoop() {
+
+    if (!gameRunning) return;
+
+
+    updatePlayer();
+
+    updateEnemy();
+
+    updateBall();
+
+    playerCollision();
+
+    playerBallCollision();
+
+    checkGoal();
+
+    render();
+
+
+    gameAnimation =
+        requestAnimationFrame(
+            gameLoop
+        );
+
+}
+
+
+/* =========================================================
+   EVITAR SCROLL
+========================================================= */
+
+document.addEventListener(
+    "touchmove",
+    e => {
+
+        if (
+            e.target.closest(
+                "#controls"
+            )
+        ) {
+
+            e.preventDefault();
+
+        }
+
+    },
+    {passive:false}
+);
+
+
+/* =========================================================
+   EVITAR ZOOM POR DOBLE TOQUE
+========================================================= */
+
+let lastTouch = 0;
+
+
+document.addEventListener(
+    "touchend",
+    e => {
+
+        const now =
+            Date.now();
+
+
+        if (
+            now - lastTouch <
+            300
+        ) {
+
+            e.preventDefault();
+
+        }
+
+
+        lastTouch = now;
+
+    },
+    {passive:false}
+);
+
+</script>
+
+</body>
+</html>
